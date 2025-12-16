@@ -1,0 +1,91 @@
+module tratata (
+    input  logic [9:0] sw,    // input (0..2024)
+    input  logic       btn,   // pashalka
+    output logic [6:0] HEX0,  // tysichye
+    output logic [6:0] HEX1,  // sotye
+    output logic [6:0] HEX2,  // desatye
+    output logic [7:0] HEX3,  // edenicy
+    output logic [6:0] HEX4   // desatki
+);
+    logic [31:0] scaled_n;
+    logic [31:0] low, high, mid;
+    logic [63:0] mid_sq;
+
+    logic [7:0]  int_part;     // celya chast (0..45)
+    logic [9:0]  frac;         // 0..999
+
+    always_comb begin
+        // масштабируем число для 3 знаков после запятой
+        scaled_n = sw * 32'd1_000_000;
+
+        low  = 0;
+        high = 32'd50000; // √(2024 * 1e6) ≈ 45000
+
+        repeat (20) begin
+            mid = (low + high) >> 1;
+            mid_sq = mid * mid;
+            if (mid_sq <= scaled_n)
+                low = mid;
+            else
+                high = mid;
+        end
+
+        int_part = low / 1000;   // celya chast
+        frac     = low % 1000;   // 3 difit after point
+    end
+
+    logic [3:0] frac_h;  // sotye
+    logic [3:0] frac_t;  // desatye
+    logic [3:0] frac_o;  // tysachnye
+
+    assign frac_h = frac / 100;
+    assign frac_t = (frac % 100) / 10;
+    assign frac_o = frac % 10;
+
+    logic [3:0] int_t;  // decatki
+    logic [3:0] int_o;  // edinucsy
+
+    assign int_t = int_part / 10;
+    assign int_o = int_part % 10;
+  
+    function automatic [6:0] seg7(input [3:0] d);
+        case (d)
+      4'd0: seg7 = 7'b1000000;
+                4'd1: seg7 = 7'b1111001;
+                4'd2: seg7 = 7'b0100100;
+                4'd3: seg7 = 7'b0110000;
+                4'd4: seg7 = 7'b0011001;
+                4'd5: seg7 = 7'b0010010;
+                4'd6: seg7 = 7'b0000010;
+                4'd7: seg7 = 7'b1111000;
+                4'd8: seg7 = 7'b0000000;
+                4'd9: seg7 = 7'b0010000;
+                default: seg7 = 7'b1111111;
+        endcase
+    endfunction
+
+//pashalka pattern
+    localparam [6:0] SEG_H = 7'b0001001; 
+    localparam [6:0] SEG_E = 7'b0000110; 
+    localparam [6:0] SEG_L = 7'b1000111;  
+    localparam [6:0] SEG_P = 7'b0001100; 
+    localparam [6:0] SEG_BLANK = 7'b1111111;
+
+    always_comb begin
+        if (btn) begin
+            HEX4 = seg7(int_t);   // decatki
+            HEX3 = seg7(int_o);   // edenicy
+            HEX2 = seg7(frac_h);  // decatye
+            HEX1 = seg7(frac_t);  // sotye
+            HEX0 = seg7(frac_o);  // tycychnye
+        end else begin
+            //pashalka
+            HEX4 = SEG_H;
+            HEX3 = SEG_E;
+            HEX2 = SEG_L;
+            HEX1 = SEG_P;
+            HEX0 = SEG_BLANK;
+        end
+    end
+
+endmodule
