@@ -10,4 +10,4 @@
 
 * official_code - code in System Verilog
 
-* presentation_pdf.pdf - version in pdf
+* pdf_presentation.pdf - version in pdf
