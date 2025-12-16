@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPGA Square Root Calculator - Single Page Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background: 
+                linear-gradient(135deg, rgba(10, 25, 47, 0.95) 0%, rgba(26, 54, 93, 0.95) 100%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><pattern id="circuit" patternUnits="userSpaceOnUse" width="40" height="40"><path d="M20 0 L20 40 M0 20 L40 20" stroke="rgba(100, 255, 218, 0.1)" stroke-width="1" fill="none"/><circle cx="20" cy="20" r="2" fill="rgba(100, 255, 218, 0.2)"/></pattern></defs><rect width="100%" height="100%" fill="url(%23circuit)"/></svg>');
+            color: #e6f1ff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(100, 255, 218, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(136, 211, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(88, 101, 242, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .presentation {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .main-title {
+            text-align: center;
+            padding: 50px 0;
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            background: linear-gradient(135deg, 
+                rgba(100, 255, 218, 0.1) 0%, 
+                rgba(136, 211, 255, 0.1) 50%, 
+                rgba(88, 101, 242, 0.1) 100%);
+            border: 2px solid rgba(100, 255, 218, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
+                        inset 0 0 50px rgba(100, 255, 218, 0.1);
+        }
+        
+        .main-title::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                #64ffda, 
+                transparent);
+        }
+        
+        h1 {
+            color: #64ffda;
+            font-size: 4em;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 20px rgba(100, 255, 218, 0.4);
+            background: linear-gradient(135deg, #64ffda 0%, #88d3ff 50%, #64ffda 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+        
+        h2 {
+            color: #64ffda;
+            font-size: 2.8em;
+            margin: 60px 0 30px;
+            padding-bottom: 20px;
+            position: relative;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #64ffda, transparent);
+            border-radius: 2px;
+        }
+        
+        h3 {
+            color: #88d3ff;
+            font-size: 2.2em;
+            margin: 40px 0 25px;
+            padding-left: 15px;
+            border-left: 4px solid #64ffda;
+        }
+        
+        .subtitle {
+            color: #88d3ff;
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+        
+        .quote {
+            text-align: center;
+            font-style: italic;
+            padding: 50px;
+            margin: 60px 0;
+            background: linear-gradient(135deg, 
+                rgba(100, 255, 218, 0.15), 
+                rgba(136, 211, 255, 0.15));
+            border-radius: 25px;
+            border: 2px solid rgba(100, 255, 218, 0.3);
+            color: #cae9ff;
+            font-size: 1.6em;
+            line-height: 1.8;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quote::before {
+            content: '"';
+            position: absolute;
+            top: -30px;
+            left: 30px;
+            font-size: 8em;
+            color: rgba(100, 255, 218, 0.1);
+            font-family: Georgia, serif;
+        }
+        
+        .team-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin: 60px 0;
+        }
+        
+        .member-card {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(100, 255, 218, 0.1) 100%);
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            transition: all 0.5s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .member-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(100, 255, 218, 0.2), 
+                transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .member-card:hover::before {
+            left: 100%;
+        }
+        
+        .member-card:hover {
+            transform: translateY(-10px);
+            border-color: #64ffda;
+            box-shadow: 0 20px 40px rgba(100, 255, 218, 0.3);
+        }
+        
+        .member-card h4 {
+            color: #64ffda;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 35px;
+            margin: 50px 0;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, 
+                rgba(17, 34, 64, 0.8) 0%, 
+                rgba(10, 25, 47, 0.8) 100%);
+            padding: 35px;
+            border-radius: 20px;
+            border-top: 6px solid #64ffda;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                #64ffda, 
+                rgba(100, 255, 218, 0.3));
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(100, 255, 218, 0.2);
+        }
+        
+        .feature-card h4 {
+            color: #64ffda;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .image-section {
+            margin: 60px 0;
+        }
+        
+        .image-container {
+            background: rgba(17, 34, 64, 0.7);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 3px solid #64ffda;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .image-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, 
+                #64ffda, #88d3ff, #5865f2, #64ffda);
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        
+        .full-size-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            display: block;
+            margin: 0 auto;
+            border: 2px solid rgba(100, 255, 218, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: #0a192f;
+        }
+        
+        .image-caption {
+            text-align: center;
+            color: #88d3ff;
+            font-size: 1.4em;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(100, 255, 218, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #64ffda;
+        }
+        
+        .algorithm-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin: 60px 0;
+            align-items: start;
+        }
+        
+        .algorithm-visual {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.05) 0%, 
+                rgba(100, 255, 218, 0.05) 100%);
+            padding: 40px;
+            border-radius: 25px;
+            border: 2px solid rgba(100, 255, 218, 0.3);
+            position: relative;
+        }
+        
+        .code-container {
+            background: linear-gradient(135deg, 
+                rgba(17, 34, 64, 0.9) 0%, 
+                rgba(10, 25, 47, 0.9) 100%);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 6px solid #64ffda;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .code-container::before {
+            content: '</>';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: rgba(100, 255, 218, 0.3);
+            font-size: 2em;
+            font-family: monospace;
+        }
+        
+        .code-container pre {
+            color: #8fdcff;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px rgba(143, 220, 255, 0.3);
+        }
+        
+        .code-comment {
+            color: #5d7186;
+            font-style: italic;
+        }
+        
+        .test-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 50px;
+            margin: 60px 0;
+        }
+        
+        .test-example {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.05) 0%, 
+                rgba(136, 211, 255, 0.1) 100%);
+            padding: 35px;
+            border-radius: 20px;
+            border: 2px solid rgba(136, 211, 255, 0.3);
+            position: relative;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .demo-item {
+            background: linear-gradient(135deg, 
+                rgba(100, 255, 218, 0.15) 0%, 
+                rgba(100, 255, 218, 0.05) 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+        
+        .demo-item:hover {
+            transform: translateY(-3px);
+        }
+        
+        .acknowledgments {
+            background: linear-gradient(135deg, 
+                rgba(100, 255, 218, 0.15) 0%, 
+                rgba(136, 211, 255, 0.15) 100%);
+            padding: 50px;
+            border-radius: 25px;
+            margin: 80px 0 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(100, 255, 218, 0.3);
+        }
+        
+        .acknowledgments::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                #64ffda, #88d3ff, #64ffda);
+        }
+        
+        .acknowledgments h3 {
+            color: #64ffda;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-align: center;
+            border: none;
+            padding: 0;
+        }
+        
+        .math-formula {
+            font-size: 2.5em;
+            text-align: center;
+            padding: 40px;
+            margin: 40px 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.05) 0%, 
+                rgba(100, 255, 218, 0.1) 100%);
+            border-radius: 20px;
+            color: #64ffda;
+            border: 2px solid rgba(100, 255, 218, 0.3);
+            font-family: 'Courier New', monospace;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .math-formula::after {
+            content: '√';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 3em;
+            color: rgba(100, 255, 218, 0.1);
+        }
+
+        .alt-algorithm {
+            margin: 60px 0;
+        }
+
+        .algorithm-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .comparison-card {
+            background: linear-gradient(135deg, 
+                rgba(17, 34, 64, 0.8) 0%, 
+                rgba(10, 25, 47, 0.8) 100%);
+            padding: 35px;
+            border-radius: 20px;
+            border: 2px solid rgba(136, 211, 255, 0.3);
+        }
+
+        .comparison-card h4 {
+            color: #64ffda;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+            border-bottom: 2px solid #64ffda;
+            padding-bottom: 10px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            h1 {
+                font-size: 3.2em;
+            }
+            
+            h2 {
+                font-size: 2.4em;
+            }
+            
+            .algorithm-section {
+                grid-template-columns: 1fr;
+            }
+
+            .algorithm-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+            
+            h2 {
+                font-size: 2em;
+            }
+            
+            h3 {
+                font-size: 1.8em;
+            }
+            
+            .feature-grid,
+            .team-section,
+            .test-results {
+                grid-template-columns: 1fr;
+            }
+            
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-title {
+                padding: 30px 15px;
+            }
+            
+            .quote {
+                padding: 30px 20px;
+                font-size: 1.4em;
+            }
+            
+            .image-container {
+                padding: 15px;
+            }
+
+            .comparison-card {
+                padding: 20px;
+            }
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(17, 34, 64, 0.8);
+            border-radius: 6px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #64ffda, #88d3ff);
+            border-radius: 6px;
+            border: 3px solid rgba(17, 34, 64, 0.8);
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #88d3ff, #64ffda);
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <!-- Main Title -->
+        <div class="main-title">
+            <h1>FPGA SQUARE ROOT CALCULATOR</h1>
+            <p class="subtitle">Digital Systems Design Course Project • Academic Year 2025-2026</p>
+        </div>
+        
+        <!-- Team Members -->
+        <h2>TEAM MEMBERS</h2>
+        <div class="team-section">
+            <div class="member-card">
+                <h4>Victoria Kalka</h4>
+                <p style="color: #88d3ff; font-size: 1.2em; margin-bottom: 15px;">Computer Science & Engineering 5</p>
+                <p style="color: #64ffda; margin-top: 20px; font-weight: bold; font-size: 1.3em;">Algorithm Design and Development & Testing</p>
+                <p style="color: #cae9ff; margin-top: 15px; line-height: 1.6;">
+                    Mathematical modeling, Python/C prototyping, Algorithm verification, Testing procedures
+                </p>
+            </div>
+            <div class="member-card">
+                <h4>Arseniy Reznichenko</h4>
+                <p style="color: #88d3ff; font-size: 1.2em; margin-bottom: 15px;">Computer Science & Engineering 1</p>
+                <p style="color: #64ffda; margin-top: 20px; font-weight: bold; font-size: 1.3em;">SystemVerilog Implementation & Hardware Integration</p>
+                <p style="color: #cae9ff; margin-top: 15px; line-height: 1.6;">
+                    FPGA implementation, Pin assignment, Hardware testing, SystemVerilog optimization
+                </p>
+            </div>
+        </div>
+        
+        <!-- Key Features -->
+        <h2>KEY FEATURES</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>⚡ Fast Computation</h4>
+                <p>Single-cycle operation using pure combinational logic, no pipelining required</p>
+            </div>
+            <div class="feature-card">
+                <h4>🎯 High Precision</h4>
+                <p>Three decimal places (0.001 resolution) achieved through fixed-point arithmetic scaling</p>
+            </div>
+            <div class="feature-card">
+                <h4>🖥️ Real-time Display</h4>
+                <p>Five seven-segment digits with precisely positioned decimal point</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔧 Hardware Optimized</h4>
+                <p>16-iteration binary search algorithm with minimal FPGA resource usage</p>
+            </div>
+        </div>
+        
+        <!-- FPGA Hardware Section -->
+        <h2>FPGA HARDWARE IMPLEMENTATION</h2>
+        
+        <!-- FPGA Board Image -->
+        <div class="image-section">
+            <div class="image-container">
+                <img src="im3.jpg" alt="FPGA Development Board with Seven-Segment Displays" class="full-size-image">
+                <div class="image-caption">FPGA Development Board with Seven-Segment Displays</div>
+            </div>
+        </div>
+        
+        <!-- Hardware Specifications -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🔢 Input System</h4>
+                <p>10-bit binary switches providing input range 0-1024</p>
+            </div>
+            <div class="feature-card">
+                <h4>🧠 Processing Core</h4>
+                <p>Binary Search Unit with exactly 16 iterations for optimal precision</p>
+            </div>
+            <div class="feature-card">
+                <h4>📟 Output Display</h4>
+                <p>5× seven-segment displays with controlled decimal point</p>
+            </div>
+            <div class="feature-card">
+                <h4>⏱️ Performance</h4>
+                <p>Pure combinational logic delivering results in single clock cycle</p>
+            </div>
+        </div>
+        
+        <!-- Python Implementation -->
+        <h3>Python Implementation (Algorithm Validation)</h3>
+        <div class="image-section">
+            <div class="image-container">
+                <img src="im4.jpg" alt="Python Algorithm Implementation" class="full-size-image">
+                <div class="image-caption">Python Binary Search Implementation for Algorithm Validation</div>
+            </div>
+        </div>
+        
+        <!-- Python Test Output -->
+        <h3>Python Test Output</h3>
+        <div class="image-section">
+            <div class="image-container">
+                <img src="im1.jpg" alt="Python Test Results" class="full-size-image">
+                <div class="image-caption">Python Algorithm Test Results</div>
+            </div>
+        </div>
+        
+        <!-- C Implementation -->
+        <h3>C Implementation (Batch Testing)</h3>
+        <div class="image-section">
+            <div class="image-container">
+                <img src="im5.jpg" alt="C Algorithm Implementation" class="full-size-image">
+                <div class="image-caption">C Program for Batch Processing and Testing</div>
+            </div>
+        </div>
+        
+        <!-- C Test Output -->
+        <h3>C Test Output</h3>
+        <div class="image-section">
+            <div class="image-container">
+                <img src="im2.jpg" alt="C Test Results" class="full-size-image">
+                <div class="image-caption">C Program Test Results</div>
+            </div>
+        </div>
+        
+        <!-- Alternative SystemVerilog Implementation -->
+        <h2>ALTERNATIVE SYSTEMVERILOG IMPLEMENTATION</h2>
+        <div class="alt-algorithm">
+            <h3>Optimized Root Calculation with 4-bit Approximation</h3>
+            
+            <div class="algorithm-comparison">
+                <div class="comparison-card">
+                    <h4>Integer Part Calculation (Binary Search)</h4>
+                    <div class="code-container">
+                        <pre>
+<span class="code-comment">// Binary search for integer part</span>
+always @(*) begin
+    n = sw;
+    
+    if ((8'd8 * 8'd8) <= n) begin
+        root = 8;
+    end else begin
+        root = 0;
+    end
+    
+    if (((root+4)*(root+4)) <= n) begin
+        root = root + 4;
+    end
+    
+    if (((root+2)*(root+2)) <= n) begin
+        root = root + 2;
+    end
+    
+    if (((root+1)*(root+1)) <= n) begin
+        root = root + 1;
+    end
+end</pre>
+                    </div>
+                </div>
+                
+                <div class="comparison-card">
+                    <h4>Fractional Part Calculation (Minimal Difference)</h4>
+                    <div class="code-container">
+                        <pre>
+<span class="code-comment">// Calculate all possible fractional values</span>
+wire [15:0] t0 = (root*10+0)*(root*10+0);
+wire [15:0] t1 = (root*10+1)*(root*10+1);
+<span class="code-comment">// ... t2 through t9</span>
+wire [15:0] target = n * 100;
+
+<span class="code-comment">// Find minimal difference</span>
+function [15:0] diff;
+    input [15:0] a, b;
+    begin
+        diff = (a>b) ? (a-b) : (b-a);
+    end
+endfunction</pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-container">
+                <pre>
+<span class="code-comment">// Complete SystemVerilog module</span>
+module sqrtt(
+    input  [7:0] sw,          <span class="code-comment">// 8-bit input</span>
+    output [6:0] hex1,        <span class="code-comment">// Integer part display</span>
+    output [7:0] hex0         <span class="code-comment">// Fractional part display</span>
+);
+
+    reg [4:0] root;           <span class="code-comment">// Integer root (0-15)</span>
+    reg [3:0] frac;           <span class="code-comment">// Fractional digit (0-9)</span>
+    reg [7:0] n;
+
+    <span class="code-comment">// Integer root calculation (binary search)</span>
+    always @(*) begin
+        n = sw;
+        <span class="code-comment">// ... binary search logic ...</span>
+    end
+
+    <span class="code-comment">// Fractional part calculation</span>
+    wire [15:0] t0  = (root*10+0)*(root*10+0);
+    wire [15:0] t1  = (root*10+1)*(root*10+1);
+    <span class="code-comment">// ... t2 through t9 calculations</span>
+    wire [15:0] target = n * 100;
+
+    <span class="code-comment">// Find minimal difference for fractional digit</span>
+    always @(*) begin
+        reg [15:0] best;
+        best = diff(t0, target);
+        frac = 0;
+        
+        if (diff(t1,target) < best) begin best = diff(t1,target); frac = 1; end
+        <span class="code-comment">// ... compare t2 through t9 ...</span>
+    end
+
+    <span class="code-comment">// Seven-segment display function</span>
+    function [6:0] seg7;
+        input [3:0] d;
+        begin
+            case (d)
+                4'd0: seg7 = 7'b1000000;  <span class="code-comment">// "0"</span>
+                4'd1: seg7 = 7'b1111001;  <span class="code-comment">// "1"</span>
+                <span class="code-comment">// ... digits 2-9 ...</span>
+                default: seg7 = 7'b1111111; <span class="code-comment">// Blank</span>
+            endcase
+        end
+    endfunction
+
+    assign hex1 = seg7(root[3:0]);      <span class="code-comment">// Integer part</span>
+    assign hex0[6:0] = seg7(frac);      <span class="code-comment">// Fractional part</span>
+    assign hex0[7] = 1'b0;              <span class="code-comment">// Decimal point control</span>
+
+endmodule</pre>
+            </div>
+        </div>
+        
+        <!-- Main SystemVerilog Implementation -->
+        <h2>MAIN SYSTEMVERLOG IMPLEMENTATION</h2>
+        
+        <div class="algorithm-section">
+            <div class="algorithm-visual">
+                <h3>Binary Search Core</h3>
+                <div class="code-container">
+                    <pre>
+<span class="code-comment">// Fixed-point binary search algorithm for FPGA</span>
+always_comb begin
+    <span class="code-comment">// Scale input for 3 decimal places precision</span>
+    scaled_n = sw * 32'd1000000;
+    
+    low = 0;
+    high = 40000;   <span class="code-comment">// sqrt(1024*1e6) upper boundary</span>
+    
+    <span class="code-comment">// Unrolled 16-iteration binary search</span>
+    repeat (16) begin
+        mid = (low + high) >> 1;      <span class="code-comment">// Efficient division by 2</span>
+        mid_sq = mid * mid;
+        
+        if (mid_sq <= scaled_n)
+            low = mid;
+        else
+            high = mid;
+    end
+    
+    <span class="code-comment">// Extract integer and fractional parts</span>
+    int_part = low / 1000;
+    frac = low % 1000;
+end</pre>
+                </div>
+            </div>
+            
+            <div class="algorithm-visual">
+                <h3>Display Output Logic</h3>
+                <div class="code-container">
+                    <pre>
+<span class="code-comment">// Digit extraction for display output</span>
+assign frac_h = frac / 100;        <span class="code-comment">// Hundredths digit</span>
+assign frac_t = (frac % 100) / 10; <span class="code-comment">// Tenths digit</span>
+assign frac_o = frac % 10;         <span class="code-comment">// Thousandths digit</span>
+
+assign int_t = int_part / 10;      <span class="code-comment">// Tens digit</span>
+assign int_o = int_part % 10;      <span class="code-comment">// Ones digit</span>
+
+<span class="code-comment">// Seven-segment display drivers</span>
+assign HEX4 = seg7(int_t);         <span class="code-comment">// Display tens</span>
+assign HEX3 = seg7(int_o);         <span class="code-comment">// Display ones with decimal point</span>
+assign HEX2 = seg7(frac_h);        <span class="code-comment">// Display tenths</span>
+assign HEX1 = seg7(frac_t);        <span class="code-comment">// Display hundredths</span>
+assign HEX0 = seg7(frac_o);        <span class="code-comment">// Display thousandths</span></pre>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Results -->
+        <h2>TEST RESULTS</h2>
+        
+        <div class="test-results">
+            <div class="test-example">
+                <h3>Sample Input/Output Tests</h3>
+                <div class="demo-grid">
+                    <div class="demo-item">
+                        <strong>Input: 25</strong><br>√25 = 05.000
+                    </div>
+                    <div class="demo-item">
+                        <strong>Input: 100</strong><br>√100 = 10.000
+                    </div>
+                    <div class="demo-item">
+                        <strong>Input: 500</strong><br>√500 = 22.360
+                    </div>
+                    <div class="demo-item">
+                        <strong>Input: 1024</strong><br>√1024 = 32.000
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-example">
+                <h3>Performance Metrics Achieved</h3>
+                <div class="demo-grid">
+                    <div class="demo-item">
+                        <strong>Accuracy</strong><br>Maximum error < 0.001
+                    </div>
+                    <div class="demo-item">
+                        <strong>Speed</strong><br>1 result per clock cycle
+                    </div>
+                    <div class="demo-item">
+                        <strong>Input Range</strong><br>0-1024 fully verified
+                    </div>
+                    <div class="demo-item">
+                        <strong>Resources</strong><br>Minimal LUT utilization
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Acknowledgments -->
+        <div class="acknowledgments">
+            <h3>ACKNOWLEDGMENTS</h3>
+            <div style="margin-top: 30px;">
+                <p><strong style="color: #64ffda; font-size: 1.3em;">Artem Burmyakov </strong></p>
+                <p style="color: #cae9ff; margin-top: 10px; font-size: 1.2em;">
+                    For expert guidance in digital systems design and FPGA architecture
+                </p>
+                
+                <p style="margin-top: 30px;"><strong style="color: #64ffda; font-size: 1.3em;">Mikhail Kuskov</strong></p>
+                <p style="color: #cae9ff; margin-top: 10px; font-size: 1.2em;">
+                    For invaluable support in hardware testing and validation methodologies
+                </p>
+                
+                <p style="margin-top: 50px; color: #64ffda; font-weight: bold; font-size: 1.4em;">
+                    Digital Systems Design Course • Computer Science & Engineering Department
+                </p>
+                <p style="color: #88d3ff; margin-top: 10px; font-size: 1.2em;">
+                    Academic Year 2025-2026
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
